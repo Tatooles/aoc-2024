@@ -12,29 +12,22 @@ for(const pair of arr) {
   b.push(split[1]);
 }
 
-a.sort();
-b.sort();
+const left = a.sort().map(x => parseInt(x));
+const right = b.sort().map(x => parseInt(x));
 
-let difference = 0;
+let similarity = 0;
 
-// I think we need a map with each number and how often it appears
+// Create map with each number and how often it appears
+const map = right.reduce((map, num) => {
+  map.set(num, (map.get(num) || 0) + 1);
+  return map;
+}, new Map());
 
-const map = new Map();
-
-for(const el of b) {
+// Then iterate through a and calculate similarity
+for(const el of left) {
   if(map.has(el)) {
-    map.set(el, map.get(el) + 1);
-  } else {
-    map.set(el, 1);
+    similarity += el * map.get(el);
   }
 }
 
-// Then iterate through a and get the values in the map
-for(const el of a) {
-  if(map.has(el)) {
-    difference += parseInt(el) * map.get(el);
-  }
-}
-
-
-console.log(difference);
+console.log(similarity);
