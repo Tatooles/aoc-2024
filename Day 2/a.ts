@@ -1,4 +1,4 @@
-const input = await Deno.readTextFile("test.txt");
+const input = await Deno.readTextFile("input.txt");
 
 // Convert text into two lists, one for each side
 const arr = input.split(/\r?\n/);
@@ -11,18 +11,22 @@ for(const report of reports) {
   let isSafe = true;
   // Determine if safe
 
+  let increasing = true;
   // Check if increasing
   for(let i = 1; i < report.length; i++) {
-    if(report[i] - report[i-1] > 3) isSafe = false;
+    let diff = report[i] - report[i-1];
+    if(diff < 1 || diff > 3) increasing = false;
   }
 
+  let decreasing = true;
   // Check if decreasing
   for(let i = 1; i < report.length; i++) {
-    if(report[i-1] - report[i] > 3) isSafe = false;
+    let diff = report[i-1] - report[i];
+    if(diff < 1 || diff > 3) decreasing = false;
   }
 
-  console.log(report, "is safe:", isSafe);
-  if(isSafe) count++;
+  // console.log(report, "is safe:", increasing || decreasing);
+  if(increasing || decreasing) count++;
 }
 
 console.log(count);
