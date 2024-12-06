@@ -1,40 +1,35 @@
 const input = await Deno.readTextFile("input.txt");
 
-// Convert text into two lists, one for each side
 const arr = input.split(/\r?\n/);
 
+// Convert text into a a 2D array, each row is an array that represents a report
 const reports = arr.map(x => x.split(" ")).map(x => x.map(y => parseInt(y)));
 
 let count = 0;
 
 for(const report of reports) {
-  let isSafe = true;
-  // Determine if safe
-
-  // Do we have to compare with 1+2?
-
-
   let increasing = true;
   let decreasing = true;
-  // Check if increasing
-  // Check if decreasing
-  for(let i = 1; i < report.length; i++) {
-    let diff = report[i] - report[i-1];
-    if(diff < 1 || diff > 3) increasing = false;
-    if(diff > -1 || diff < -3) decreasing = false;
-  }
-
+  
+  // Only 1 skip is allowed
   let increasingSkip = 1;
   let decreasingSkip = 1;
-  // Second check for if one we skip one
-  for(let i = 2; i < report.length; i++) {
-    let diff = report[i] - report[i-2];
-    if(diff < 1 || diff > 3) increasingSkip--;
-    if(diff > -1 || diff < -3) decreasingSkip--;
+  
+  for(let i = 1; i < report.length; i++) {
+    let diff = report[i] - report[i-1];
+    // Check if increasing
+    if(diff < 1 || diff > 3) increasing = false;
+    // Check if decreasing
+    if(diff > -1 || diff < -3) decreasing = false;
+
+    let skipDiff = report[i] - report[i-2];
+    // Check if increasing with a skip
+    if(skipDiff < 1 || skipDiff > 3) increasingSkip--;
+    // Check if decreasing with a skip
+    if(skipDiff > -1 || skipDiff < -3) decreasingSkip--;
   }
 
-  // console.log(report, "is safe:", increasing, decreasing, increasingSkip, decreasingSkip);
-  if(increasing || decreasing || increasingSkip >= 0 || decreasingSkip >= 0) count++;
+  if(increasing || decreasing || increasingSkip > -1 || decreasingSkip > -1) count++;
 }
 
 console.log(count);
