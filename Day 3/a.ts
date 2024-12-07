@@ -4,7 +4,7 @@ let regexMatch = input.matchAll(/mul\((\d+),(\d+)\)/g);
 
 let total = 0;
 
-regexMatch.forEach(element => {
+regexMatch.forEach((element) => {
   total += element[1] * element[2];
 });
 
