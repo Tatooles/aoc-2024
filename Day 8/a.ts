@@ -1,4 +1,4 @@
-const input = await Deno.readTextFile("test.txt");
+const input = await Deno.readTextFile("input.txt");
 
 const grid = input.split(/\r?\n/).map((x) => x.split(""));
 
@@ -10,6 +10,9 @@ const printGrid = (gridInstance: string[][]) => {
 };
 
 const frequencies = new Map<string, number[][]>();
+
+// The locations of the antinodes are stored here
+const antinodes = new Set<string>();
 
 // Find each individual frequenct
 grid.forEach((row, i) => {
@@ -23,10 +26,8 @@ grid.forEach((row, i) => {
   });
 });
 
-const countAntinodes = (frequency: string): number => {
+const countAntinodes = (frequency: string) => {
   // Create a copy of the grid to play with
-  let frequencyCount = 0;
-
   const gridCopy: string[][] = JSON.parse(JSON.stringify(grid));
 
   // Clear grid to make things easier
@@ -41,49 +42,42 @@ const countAntinodes = (frequency: string): number => {
   const locations = frequencies.get(frequency);
 
   if (!locations?.length || locations?.length < 2) {
-    return 0;
+    return;
   }
 
   // Go through every possible combo of towers
   for (let first = 0; first < locations.length; first++) {
     for (let second = first + 1; second < locations.length; second++) {
       // Compare the two
-      let diffRow = locations[second][0] - locations[first][0];
-      let diffCol = locations[second][1] - locations[first][1];
-      console.log("diff row, col", diffRow, diffCol);
+      const diffRow = locations[second][0] - locations[first][0];
+      const diffCol = locations[second][1] - locations[first][1];
+      // console.log("diff row, col", diffRow, diffCol);
 
       // Attempt to place a thing on both sides of each, 2 total locations!
       // Try 1st oppsite of second
-      try {
-        gridCopy[locations[first][0] - diffRow][locations[first][1] - diffCol] =
-          "#";
-        frequencyCount++;
-      } catch (_e) {
-        // doesnt matter
+      let i = locations[first][0] - diffRow;
+      let j = locations[first][1] - diffCol;
+      if (i > -1 && i < gridCopy.length && j > -1 && j < gridCopy[i].length) {
+        antinodes.add(`${i},${j}`);
       }
 
-      try {
-        gridCopy[locations[second][0] + diffRow][
-          locations[second][1] + diffCol
-        ] = "#";
-        frequencyCount++;
-      } catch (_e) {
-        // dont matta
+      i = locations[second][0] + diffRow;
+      j = locations[second][1] + diffCol;
+
+      if (i > -1 && i < gridCopy.length && j > -1 && j < gridCopy[i].length) {
+        antinodes.add(`${i},${j}`);
       }
       // Maybe just toss it in a try catch instead of checking for errors LOL
     }
   }
-  printGrid(gridCopy);
-
-  return frequencyCount;
+  // printGrid(gridCopy);
 };
 
-console.log(frequencies);
-
-let count = 0;
 // Need to count number of antinodes per frequency
 for (const frequency of frequencies.keys()) {
-  count += countAntinodes(frequency);
+  countAntinodes(frequency);
 }
 
-console.log(count);
+console.log(antinodes.size);
+
+// TODO: Getting lots of negaive antinodes, fix that
