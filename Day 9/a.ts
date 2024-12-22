@@ -11,15 +11,15 @@ const main = async () => {
 };
 
 const placeBlocks = (input: number[]) => {
-  let output = "";
+  const output = [];
 
   let isFreeSpace = false;
   let index = 0;
   for (const val of input) {
     for (let i = 0; i < val; i++) {
-      if (isFreeSpace) output += ".";
+      if (isFreeSpace) output.push(-1);
       else {
-        output += index;
+        output.push(index);
       }
     }
     if (!isFreeSpace) index++;
@@ -30,39 +30,34 @@ const placeBlocks = (input: number[]) => {
 };
 
 // Move the blocks from the end into the whitespace
-const moveBlocks = (diskMap: string) => {
-  const array = diskMap.split("");
-
+const moveBlocks = (diskMap: number[]) => {
   // Two pointers in a while loop
   let i = 0;
-  let j = array.length - 1;
+  let j = diskMap.length - 1;
   while (i < j) {
-    const front = array[i];
-    const end = array[j];
-    if (front !== ".") i++;
+    const front = diskMap[i];
+    const end = diskMap[j];
+    if (front !== -1) i++;
 
-    if (end === ".") {
+    if (end === -1) {
       j--;
     }
 
-    if (front === "." && end !== ".") {
-      array[i] = array[j];
-      array[j] = ".";
+    if (front === -1 && end !== -1) {
+      diskMap[i] = diskMap[j];
+      diskMap[j] = -1;
       i++;
       j--;
     }
   }
-  // console.log(array.join(""));
-  return array.join("");
+  return diskMap;
 };
 
-const getChecksum = (compacted: string) => {
-  // Could convert to array of ints, or just parse as we go
-  const array = compacted.split("");
-  // Should be as simple as multiplying the index by it's value
+const getChecksum = (compacted: number[]) => {
+  // Simply multiply the index by value
   let count = 0;
-  for (let i = 0; i < array.length; i++) {
-    if (array[i] !== ".") count += parseInt(array[i]) * i;
+  for (let i = 0; i < compacted.length && compacted[i] !== -1; i++) {
+    count += compacted[i] * i;
   }
   return count;
 };
