@@ -3,21 +3,21 @@ const freeRegistry: { index: number; length: number }[] = [];
 const fileRegistry: { value: number; index: number; length: number }[] = [];
 
 const main = async () => {
-  const input = await Deno.readTextFile("test.txt");
+  const input = await Deno.readTextFile("input.txt");
 
   const array = input.split("").map((x) => +x);
 
-  const diskMap = placeBlocks(array);
+  placeBlocks(array);
 
-  printString();
+  // printString();
 
   registerBlocks();
 
-  console.log(freeRegistry, fileRegistry);
+  // console.log(freeRegistry, fileRegistry);
 
-  const compacted = moveBlocks();
+  moveBlocks();
 
-  // console.log(getChecksum(compacted));
+  console.log(getChecksum());
 };
 
 const printString = () => {
@@ -86,26 +86,57 @@ const registerBlocks = () => {
 // Need to measure the size of the filled and free block
 const moveBlocks = () => {
   // Starting at the back of the registries
-  let filePointer = fileRegistry.length - 1;
+  // Need to try every file starting from the back
+  for (const file of fileRegistry.reverse()) {
+    console.log("file", file.value);
+    placeFile(file);
+  }
+  // printString();
+};
+
+const placeFile = (file: {
+  value: number;
+  index: number;
+  length: number;
+}) => {
   for (let i = 0; i < diskMap.length; i++) {
-    if (i === -1) {
+    if (diskMap[i] === -1) {
       // Find the length of this free space
-      const space = freeRegistry.find((x) => x.index === 1);
-      if (space && space.length >= fileRegistry[filePointer].length) {
-        // Place block here
-        for (let j = 0; j < fileRegistry[filePointer].length; j++) {
-          diskMap[i + j] = fileRegistry[filePointer].value;
+
+      const spaceLength = findLength(i);
+
+      // Index also has to be lower
+      if (spaceLength >= file.length && i < file.index) {
+        for (let j = 0; j < file.length; j++) {
+          // Place block here
+          diskMap[i + j] = file.value;
+
+          // Zero out end section
+          diskMap[file.index + j] = -1;
         }
+        return;
       }
     }
   }
 };
 
-const getChecksum = (compacted: number[]) => {
+const findLength = (index: number) => {
+  // Find the number of free spaces starting here
+  let length = 0;
+
+  while (diskMap[index] === -1) {
+    index++;
+    length++;
+  }
+
+  return length;
+};
+
+const getChecksum = () => {
   // Simply multiply the index by value
   let count = 0;
-  for (let i = 0; i < compacted.length && compacted[i] !== -1; i++) {
-    count += compacted[i] * i;
+  for (let i = 0; i < diskMap.length; i++) {
+    if (diskMap[i] !== -1) count += diskMap[i] * i;
   }
   return count;
 };
