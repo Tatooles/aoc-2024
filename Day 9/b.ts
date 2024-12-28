@@ -88,10 +88,8 @@ const moveBlocks = () => {
   // Starting at the back of the registries
   // Need to try every file starting from the back
   for (const file of fileRegistry.reverse()) {
-    console.log("file", file.value);
     placeFile(file);
   }
-  // printString();
 };
 
 const placeFile = (file: {
@@ -99,37 +97,43 @@ const placeFile = (file: {
   index: number;
   length: number;
 }) => {
-  for (let i = 0; i < diskMap.length; i++) {
-    if (diskMap[i] === -1) {
-      // Find the length of this free space
+  // Find valid free space
+  const [spaceIndex, spaceLength] = findSpace(file.length, file.index);
 
-      const spaceLength = findLength(i);
+  // No space for this file
+  if (spaceIndex === -1) return;
 
-      // Index also has to be lower
-      if (spaceLength >= file.length && i < file.index) {
-        for (let j = 0; j < file.length; j++) {
-          // Place block here
-          diskMap[i + j] = file.value;
+  // Index also has to be lower
+  for (let j = 0; j < file.length; j++) {
+    // Place block here
+    diskMap[spaceIndex + j] = file.value;
 
-          // Zero out end section
-          diskMap[file.index + j] = -1;
-        }
-        return;
-      }
-    }
+    // Zero out end section
+    diskMap[file.index + j] = -1;
   }
 };
 
-const findLength = (index: number) => {
-  // Find the number of free spaces starting here
-  let length = 0;
+// Space needs to be, large enough, and have an index smaller than the file's
+const findSpace = (length: number, index: number) => {
+  // will have to search then modify the free registry
 
-  while (diskMap[index] === -1) {
-    index++;
-    length++;
+  let returnIndex = -1;
+  let returnLength = -1;
+  // Start from the beginning
+  for (const space of freeRegistry) {
+    if (space.length >= length && space.index < index) {
+      returnIndex = space.index;
+      returnLength = space.length;
+
+      // Now modify this space to contain the block
+      space.index += length;
+      space.length -= length;
+
+      break;
+    }
   }
 
-  return length;
+  return [returnIndex, returnLength];
 };
 
 const getChecksum = () => {
