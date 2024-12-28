@@ -1,6 +1,6 @@
-const disk: any = [];
-
-const allFiles: any = [];
+const diskMap: number[] = [];
+const freeRegistry: { index: number; length: number }[] = [];
+const fileRegistry: { value: number; index: number; length: number }[] = [];
 
 const main = async () => {
   const input = await Deno.readTextFile("test.txt");
@@ -9,16 +9,18 @@ const main = async () => {
 
   const diskMap = placeBlocks(array);
 
-  const [freeRegistry, fileRegistry] = registerBlocks(diskMap);
+  printString();
+
+  registerBlocks();
 
   console.log(freeRegistry, fileRegistry);
 
-  // const compacted = moveBlocks(diskMap);
+  const compacted = moveBlocks();
 
   // console.log(getChecksum(compacted));
 };
 
-const printString = (diskMap: number[]) => {
+const printString = () => {
   let string = "";
   for (const val of diskMap) {
     if (val === -1) {
@@ -31,22 +33,18 @@ const printString = (diskMap: number[]) => {
 };
 
 const placeBlocks = (input: number[]) => {
-  const output = [];
-
   let isFreeSpace = false;
   let index = 0;
   for (const val of input) {
     for (let i = 0; i < val; i++) {
-      if (isFreeSpace) output.push(-1);
+      if (isFreeSpace) diskMap.push(-1);
       else {
-        output.push(index);
+        diskMap.push(index);
       }
     }
     if (!isFreeSpace) index++;
     isFreeSpace = !isFreeSpace;
   }
-
-  return output;
 };
 
 /**
@@ -59,9 +57,7 @@ const placeBlocks = (input: number[]) => {
  *
  * One array is for free space, one is for files
  */
-const registerBlocks = (diskMap: number[]) => {
-  const fileRegistry = [];
-  const freeRegistry = [];
+const registerBlocks = () => {
   let length = 0;
   let startIndex = 0;
   let currentVal = diskMap[0];
@@ -83,36 +79,26 @@ const registerBlocks = (diskMap: number[]) => {
     }
     length++;
   }
-
-  return [freeRegistry, fileRegistry];
 };
 
 // Move the blocks from the end into the whitespace
 // TODO: Now just move the entire block
 // Need to measure the size of the filled and free block
-const moveBlocks = (diskMap: number[]) => {
-  // Two pointers in a while loop
-  let i = 0;
-  let j = diskMap.length - 1;
-  while (i < j) {
-    const front = diskMap[i];
-
-    // End pointer now needs to represent a whole block
-    const end = diskMap[j];
-    if (front !== -1) i++;
-
-    if (end === -1) {
-      j--;
-    }
-
-    if (front === -1 && end !== -1) {
-      diskMap[i] = diskMap[j];
-      diskMap[j] = -1;
-      i++;
-      j--;
+const moveBlocks = () => {
+  // Starting at the back of the registries
+  let filePointer = fileRegistry.length - 1;
+  for (let i = 0; i < diskMap.length; i++) {
+    if (i === -1) {
+      // Find the length of this free space
+      const space = freeRegistry.find((x) => x.index === 1);
+      if (space && space.length >= fileRegistry[filePointer].length) {
+        // Place block here
+        for (let j = 0; j < fileRegistry[filePointer].length; j++) {
+          diskMap[i + j] = fileRegistry[filePointer].value;
+        }
+      }
     }
   }
-  return diskMap;
 };
 
 const getChecksum = (compacted: number[]) => {
