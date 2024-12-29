@@ -7,20 +7,16 @@ const main = async () => {
 
   const array = input.split("").map((x) => +x);
 
-  placeBlocks(array);
-
-  // printString();
+  initializeDisk(array);
 
   registerBlocks();
 
-  // console.log(freeRegistry, fileRegistry);
-
   moveBlocks();
 
-  console.log(getChecksum());
+  getChecksum();
 };
 
-const printString = () => {
+const printDisk = () => {
   let string = "";
   for (const val of diskMap) {
     if (val === -1) {
@@ -32,7 +28,7 @@ const printString = () => {
   console.log(string);
 };
 
-const placeBlocks = (input: number[]) => {
+const initializeDisk = (input: number[]) => {
   let isFreeSpace = false;
   let index = 0;
   for (const val of input) {
@@ -49,13 +45,10 @@ const placeBlocks = (input: number[]) => {
 
 /**
  * Register blocks into two arrays
- *
- * The array will look like this
- *
- * I think we don't really need value
- * [value, first index, length]
- *
  * One array is for free space, one is for files
+ *
+ * Arays will contain index and length
+ * File array will also contain the value
  */
 const registerBlocks = () => {
   let length = 0;
@@ -63,7 +56,6 @@ const registerBlocks = () => {
   let currentVal = diskMap[0];
   for (let i = 0; i < diskMap.length + 1; i++) {
     if (diskMap[i] != currentVal || diskMap[i] === undefined) {
-      // Onto a new value
       if (diskMap[i - 1] === -1) {
         freeRegistry.push({ "index": i - length, "length": length });
       } else {
@@ -81,68 +73,77 @@ const registerBlocks = () => {
   }
 };
 
-// Move the blocks from the end into the whitespace
-// TODO: Now just move the entire block
-// Need to measure the size of the filled and free block
+/**
+ * Move entire blocks from the end into the whitespace
+ * Try moving every file starting from the back
+ */
 const moveBlocks = () => {
-  // Starting at the back of the registries
-  // Need to try every file starting from the back
   for (const file of fileRegistry.reverse()) {
     placeFile(file);
   }
 };
 
+/**
+ * Must find valid empty space for the given file
+ *
+ * Once space is found:
+ *  Space is filled with file
+ *  Original file location is made empty
+ *
+ * @param file
+ * @returns
+ */
 const placeFile = (file: {
   value: number;
   index: number;
   length: number;
 }) => {
-  // Find valid free space
-  const [spaceIndex, spaceLength] = findSpace(file.length, file.index);
+  const spaceIndex = findSpace(file.length, file.index);
 
-  // No space for this file
   if (spaceIndex === -1) return;
 
-  // Index also has to be lower
   for (let j = 0; j < file.length; j++) {
-    // Place block here
     diskMap[spaceIndex + j] = file.value;
-
-    // Zero out end section
     diskMap[file.index + j] = -1;
   }
 };
 
-// Space needs to be, large enough, and have an index smaller than the file's
-const findSpace = (length: number, index: number) => {
-  // will have to search then modify the free registry
+/**
+ * Search then modify free registry
+ *
+ * Space must be large enough, and have an index smaller than file
+ *
+ * @param fileLength
+ * @param fileIndex
+ * @returns
+ */
+const findSpace = (fileLength: number, fileIndex: number) => {
+  let spaceIndex = -1;
 
-  let returnIndex = -1;
-  let returnLength = -1;
-  // Start from the beginning
   for (const space of freeRegistry) {
-    if (space.length >= length && space.index < index) {
-      returnIndex = space.index;
-      returnLength = space.length;
+    if (space.length >= fileLength && space.index < fileIndex) {
+      spaceIndex = space.index;
 
-      // Now modify this space to contain the block
-      space.index += length;
-      space.length -= length;
+      // Modify this space to contain the block
+      space.index += fileLength;
+      space.length -= fileLength;
 
       break;
     }
   }
 
-  return [returnIndex, returnLength];
+  return spaceIndex;
 };
 
+/**
+ *  Simply multiply the index by it's value
+ */
 const getChecksum = () => {
-  // Simply multiply the index by value
   let count = 0;
   for (let i = 0; i < diskMap.length; i++) {
     if (diskMap[i] !== -1) count += diskMap[i] * i;
   }
-  return count;
+  console.log(count);
 };
 
 console.time("execution time");
