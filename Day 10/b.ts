@@ -22,14 +22,14 @@ const traceTrailHeads = () => {
 };
 
 /**
- * Find all ends that can be reached via trailhead to the end using DFS
+ * Find all paths from this trailhead to the end using DFS
  *
  * @param i
  * @param j
- * @returns Number of trail ends reachable
+ * @returns Number of paths to a trail end
  */
 const traceTrail = (i: number, j: number) => {
-  const foundEnds = new Set();
+  let paths = 0;
   const stack = [[i, j]];
 
   while (stack.length > 0) {
@@ -37,7 +37,7 @@ const traceTrail = (i: number, j: number) => {
 
     if (map[node[0]][node[1]] === 9) {
       // Found a path
-      foundEnds.add(`${node[0]}${node[1]}`);
+      paths += 1;
     }
 
     const neighbors = findNeighbors(node[0], node[1]);
@@ -46,7 +46,7 @@ const traceTrail = (i: number, j: number) => {
       stack.push(neighbor);
     }
   }
-  return foundEnds.size;
+  return paths;
 };
 
 /**
